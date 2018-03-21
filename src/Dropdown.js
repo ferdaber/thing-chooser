@@ -1,84 +1,74 @@
 import React from 'react'
+import PropTypes from 'prop-types'
+import styled from 'styled-components'
 import Downshift from 'downshift'
-import ChevronDown from 'react-icons/fa/chevron-down'
 
 import {
-    Root,
-    ValueWrapper,
-    MenuIcon,
+    CommonContainer,
+    CommonIcon,
+    bodyMixin,
     Menu,
     MenuItem,
-    MenuItemButton
-} from './Common'
+    MenuItemButton,
+    DEFAULT_HEIGHT,
+    DEFAULT_WIDTH,
+    DEFAULT_MENU_HEIGHT
+} from './shared-styles'
+import { optionsPropTypes, mergeRootProps } from './utils'
 
-const DropdownButton = ValueWrapper.withComponent('button').extend`
+import { bluePrimary, iconColorActive, iconColorHover, nightMedLight } from '@widen/patterns-style/lib/colors'
+
+import ArrowDown from 'react-icons/lib/md/keyboard-arrow-down'
+
+export const Button = styled.button`
+    ${bodyMixin}
+    color: ${props => (props.hasPlaceholder ? nightMedLight : 'inherit')};
     cursor: pointer;
-    transition: all 150ms linear;
-    color: ${props => (props.isPlaceholder ? 'gray' : 'inherit')};
     text-align: left;
+    transition: all 150ms linear;
 
     &:hover,
     &:focus,
     &:active {
-        border-color: #0063cc;
+        border-color: ${bluePrimary};
         outline: none;
     }
 `
 
-const DropdownMenuIcon = MenuIcon.extend`
-    transition: all 150ms linear;
-    transform-origin: center;
-    color: initial;
-    fill: initial;
-
-    ${DropdownButton}:hover &,
-    ${DropdownButton}:focus &,
-    ${DropdownButton}:active & {
-        outline: none;
-        color: #0063cc;
-        fill: #0063cc;
+export const Icon = CommonIcon.extend`
+    ${Button}:hover & {
+        color: ${iconColorHover};
+        fill: ${iconColorHover};
     }
 
-    ${DropdownButton}:active & {
+    ${Button}:focus &,
+    ${Button}:active & {
+        color: ${iconColorActive};
+        fill: ${iconColorActive};
+        outline: none;
+    }
+
+    ${Button}:active & {
         transform: scale(1.1, 1.1);
     }
 `
 
-export const Dropdown = ({ options, onSelect }) => (
-    <Downshift
-        onSelect={onSelect}
-        itemToString={item => (item ? item.label : '')}
-    >
-        {({
-            getButtonProps,
-            getItemProps,
-            getRootProps,
-            highlightedIndex,
-            isOpen,
-            selectedItem
-        }) => (
-            <Root {...getRootProps({ refKey: 'innerRef' })}>
-                <DropdownButton
-                    {...getButtonProps()}
-                    isPlaceholder={!selectedItem}
-                >
-                    {selectedItem ? selectedItem.label : 'Select a fruit'}
-                    <DropdownMenuIcon isOpen={isOpen}>
-                        <ChevronDown />
-                    </DropdownMenuIcon>
-                </DropdownButton>
+export const Dropdown = ({ className, height, innerRef, maxMenuHeight, onSelect, options, placeholder, width }) => (
+    <Downshift onSelect={onSelect} itemToString={item => (item ? item.label : '')}>
+        {({ getButtonProps, getItemProps, getRootProps, highlightedIndex, isOpen, selectedItem }) => (
+            <CommonContainer {...mergeRootProps(getRootProps, innerRef)} className={className} width={width}>
+                <Button {...getButtonProps()} hasPlaceholder={!selectedItem} height={height}>
+                    {selectedItem ? selectedItem.label : placeholder}
+                    <Icon isOpen={isOpen} height={height}>
+                        <ArrowDown focusable="false" />
+                    </Icon>
+                </Button>
                 {isOpen && (
-                    <Menu>
+                    <Menu width={width} maxMenuHeight={maxMenuHeight}>
                         {options.map((option, idx) => (
-                            <MenuItem
-                                key={option.value}
-                                highlighted={idx === highlightedIndex}
-                            >
+                            <MenuItem key={option.value} isHighlighted={idx === highlightedIndex}>
                                 <MenuItemButton
-                                    active={
-                                        selectedItem &&
-                                        option.value === selectedItem.value
-                                    }
+                                    isActive={selectedItem && option.value === selectedItem.value}
                                     {...getItemProps({ item: option })}
                                 >
                                     {option.label}
@@ -87,7 +77,26 @@ export const Dropdown = ({ options, onSelect }) => (
                         ))}
                     </Menu>
                 )}
-            </Root>
+            </CommonContainer>
         )}
     </Downshift>
 )
+
+Dropdown.defaultProps = {
+    height: DEFAULT_HEIGHT,
+    width: DEFAULT_WIDTH,
+    maxMenuHeight: DEFAULT_MENU_HEIGHT
+}
+
+Dropdown.propTypes = {
+    className: PropTypes.string,
+    height: PropTypes.number,
+    innerRef: PropTypes.func,
+    maxMenuHeight: PropTypes.number,
+    onSelect: PropTypes.func,
+    options: optionsPropTypes.isRequired,
+    placeholder: PropTypes.string,
+    width: PropTypes.number
+}
+
+export default Dropdown

@@ -1,72 +1,65 @@
 import React from 'react'
-import Downshift from 'downshift'
+import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import ChevronDown from 'react-icons/fa/chevron-down'
+import Downshift from 'downshift'
 
 import {
-    ValueWrapper,
+    bodyMixin,
+    CommonContainer,
+    CommonIcon,
     Menu,
-    MenuIcon,
     MenuItem,
-    MenuItemButton
-} from './Common'
+    MenuItemButton,
+    DEFAULT_HEIGHT,
+    DEFAULT_WIDTH,
+    DEFAULT_MENU_HEIGHT
+} from './shared-styles'
+import { mergeRootProps, optionsPropTypes } from './utils'
 
-const Root = styled.div`
-    position: relative;
-    width: 320px;
-`
+import { bluePrimary, iconColorActive, nightMedLight } from '@widen/patterns-style/lib/colors'
 
-const Input = ValueWrapper.withComponent('input').extend`
-    transition: border-color 150ms linear;
+import ArrowDown from 'react-icons/lib/md/keyboard-arrow-down'
+
+export const Input = styled.input`
+    ${bodyMixin} transition: border-color 150ms linear;
 
     &:focus {
-        border-color: #0063cc;
+        border-color: ${bluePrimary};
         outline: none;
+    }
 
-        + ${MenuIcon} {
-            color: #0063cc;
-            fill: #0063cc;
-        }
+    &::placeholder {
+        color: ${nightMedLight};
     }
 `
 
-export const Autocomplete = ({ onSelect, options, placeholder }) => (
-    <Downshift
-        onSelect={onSelect}
-        itemToString={item => (item ? item.label : '')}
-    >
-        {({
-            getRootProps,
-            getInputProps,
-            getItemProps,
-            isOpen,
-            inputValue,
-            selectedItem,
-            highlightedIndex
-        }) => {
+export const Icon = CommonIcon.extend`
+    ${Input}:focus + & {
+        color: ${iconColorActive};
+        fill: ${iconColorActive};
+    }
+`
+
+export const Autocomplete = ({ className, height, innerRef, maxMenuHeight, onSelect, options, placeholder, width }) => (
+    <Downshift onSelect={onSelect} itemToString={item => (item ? item.label : '')}>
+        {({ getRootProps, getInputProps, getItemProps, isOpen, inputValue, selectedItem, highlightedIndex }) => {
             const filteredResults = options.filter(option =>
                 option.label.toLowerCase().includes(inputValue.toLowerCase())
             )
             const isMenuOpen = !!(isOpen && filteredResults.length)
             return (
-                <Root {...getRootProps({ refKey: 'innerRef' })}>
-                    <Input {...getInputProps({ placeholder })} />
-                    <MenuIcon isOpen={isMenuOpen}>
-                        <ChevronDown />
-                    </MenuIcon>
+                <CommonContainer {...mergeRootProps(getRootProps, innerRef)} className={className} width={width}>
+                    <Input {...getInputProps({ placeholder })} height={height} />
+                    <Icon isOpen={isMenuOpen} height={height}>
+                        <ArrowDown focusable="false" />
+                    </Icon>
                     {isMenuOpen && (
-                        <Menu>
+                        <Menu width={width} maxMenuHeight={maxMenuHeight}>
                             {filteredResults.map((option, idx) => (
-                                <MenuItem
-                                    key={option.value}
-                                    highlighted={idx === highlightedIndex}
-                                >
+                                <MenuItem key={option.value} isHighlighted={idx === highlightedIndex}>
                                     <MenuItemButton
                                         {...getItemProps({ item: option })}
-                                        active={
-                                            selectedItem &&
-                                            option.value === selectedItem.value
-                                        }
+                                        isActive={selectedItem && option.value === selectedItem.value}
                                     >
                                         {option.label}
                                     </MenuItemButton>
@@ -74,8 +67,25 @@ export const Autocomplete = ({ onSelect, options, placeholder }) => (
                             ))}
                         </Menu>
                     )}
-                </Root>
+                </CommonContainer>
             )
         }}
     </Downshift>
 )
+
+Autocomplete.defaultProps = {
+    height: DEFAULT_HEIGHT,
+    width: DEFAULT_WIDTH,
+    maxMenuHeight: DEFAULT_MENU_HEIGHT
+}
+
+Autocomplete.propTypes = {
+    className: PropTypes.string,
+    height: PropTypes.number,
+    innerRef: PropTypes.func,
+    maxMenuHeight: PropTypes.number,
+    onSelect: PropTypes.func,
+    options: optionsPropTypes.isRequired,
+    placeholder: PropTypes.string,
+    width: PropTypes.number
+}
