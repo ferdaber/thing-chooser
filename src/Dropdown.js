@@ -53,12 +53,24 @@ export const Icon = CommonIcon.extend`
     }
 `
 
-export const Dropdown = ({ className, height, innerRef, maxMenuHeight, onSelect, options, placeholder, width }) => (
+export const Dropdown = ({
+    className,
+    height,
+    innerRef,
+    maxMenuHeight,
+    onSelect,
+    options,
+    placeholder,
+    renderSelectedItem,
+    width
+}) => (
     <Downshift onSelect={onSelect} itemToString={item => (item ? item.label : '')}>
         {({ getButtonProps, getItemProps, getRootProps, highlightedIndex, isOpen, selectedItem }) => (
             <CommonContainer {...mergeRootProps(getRootProps, innerRef)} className={className} width={width}>
                 <Button {...getButtonProps()} hasPlaceholder={!selectedItem} height={height}>
-                    {selectedItem ? selectedItem.label : placeholder}
+                    {selectedItem
+                        ? renderSelectedItem ? renderSelectedItem(selectedItem) : selectedItem.label
+                        : placeholder}
                     <Icon isOpen={isOpen} height={height}>
                         <ArrowDown focusable="false" />
                     </Icon>
@@ -96,6 +108,7 @@ Dropdown.propTypes = {
     onSelect: PropTypes.func,
     options: optionsPropTypes.isRequired,
     placeholder: PropTypes.string,
+    renderSelectedItem: PropTypes.func,
     width: PropTypes.number
 }
 

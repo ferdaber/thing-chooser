@@ -40,12 +40,27 @@ export const Icon = CommonIcon.extend`
     }
 `
 
-export const Autocomplete = ({ className, height, innerRef, maxMenuHeight, onSelect, options, placeholder, width }) => (
-    <Downshift onSelect={onSelect} itemToString={item => (item ? item.label : '')}>
+export const Autocomplete = ({
+    className,
+    filter,
+    height,
+    innerRef,
+    maxMenuHeight,
+    onSelect,
+    options,
+    placeholder,
+    width
+}) => (
+    <Downshift onSelect={onSelect} itemToString={item => (item ? item.label : '')} defaultHighlightedIndex={0}>
         {({ getRootProps, getInputProps, getItemProps, isOpen, inputValue, selectedItem, highlightedIndex }) => {
-            const filteredResults = options.filter(option =>
-                option.label.toLowerCase().includes(inputValue.toLowerCase())
-            )
+            const filteredResults =
+                filter === false
+                    ? options
+                    : typeof filter === 'function'
+                        ? options.filter((option, index, options) =>
+                              filter({ index, inputValue, option, options, selectedItem })
+                          )
+                        : options.filter(option => option.label.toLowerCase().includes(inputValue.toLowerCase()))
             const isMenuOpen = !!(isOpen && filteredResults.length)
             return (
                 <CommonContainer {...mergeRootProps(getRootProps, innerRef)} className={className} width={width}>
@@ -81,6 +96,7 @@ Autocomplete.defaultProps = {
 
 Autocomplete.propTypes = {
     className: PropTypes.string,
+    filter: PropTypes.oneOfType([PropTypes.oneOf([false]), PropTypes.func]),
     height: PropTypes.number,
     innerRef: PropTypes.func,
     maxMenuHeight: PropTypes.number,

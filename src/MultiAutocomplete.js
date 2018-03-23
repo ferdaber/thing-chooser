@@ -89,7 +89,16 @@ export class MultiAutocomplete extends React.Component {
     }
 
     render() {
-        const { height, innerRef, maxMenuHeight, onSelect, placeholder, className, width } = this.props
+        const {
+            height,
+            innerRef,
+            maxMenuHeight,
+            onSelect,
+            placeholder,
+            className,
+            renderSelectedItem,
+            width
+        } = this.props
         return (
             <FocusWithin onBlur={() => this.setState({ inputWidth: 0 })}>
                 {({ isFocused, focusProps }) => {
@@ -149,7 +158,7 @@ export class MultiAutocomplete extends React.Component {
                                                                   this.setSelectedItemsRef(selectedItems, item, idx)
                                                               }
                                                           >
-                                                              {item.label}
+                                                              {this.renderSelectedItemTag(item)}
                                                           </SelectionTag>
                                                       ))
                                                     : [
@@ -164,7 +173,7 @@ export class MultiAutocomplete extends React.Component {
                                                                   )
                                                               }
                                                           >
-                                                              {selectedItems[0].label}
+                                                              {this.renderSelectedItemTag(selectedItems[0])}
                                                           </SelectionTag>,
                                                           selectedItems.length > 1 && (
                                                               <SelectionTag
@@ -240,11 +249,18 @@ export class MultiAutocomplete extends React.Component {
     }
 
     getFilteredResults = (selectedItems, filterValue) =>
-        this.props.options
-            .filter(option => option.label.toLowerCase().includes(filterValue.toLowerCase()))
-            .filter(
-                option => !selectedItems || !selectedItems.some(selectedItem => selectedItem.value === option.value)
-            )
+        this.props.filter === false
+            ? this.props.options
+            : typeof this.props.filter === 'function'
+                ? this.props.options.filter((option, index, options) =>
+                      this.props.filter({ index, inputValue, option, options, selectedItem })
+                  )
+                : this.props.options
+                      .filter(option => option.label.toLowerCase().includes(filterValue.toLowerCase()))
+                      .filter(
+                          option =>
+                              !selectedItems || !selectedItems.some(selectedItem => selectedItem.value === option.value)
+                      )
 
     getInputKeydownHandler = (selectedItems, selectItemCb) => event => {
         // allow either deleting the last tag in selected items or focusing to it
@@ -280,6 +296,8 @@ export class MultiAutocomplete extends React.Component {
         }
     }
 
+    renderSelectedItemTag = item => (this.props.renderSelectedItem ? this.props.renderSelectedItem(item) : item.label)
+
     removeItem = (itemToRemove, selectedItems, selectItemCb) => {
         selectItemCb(selectedItems.filter(item => item.value !== itemToRemove.value))
         this.input.focus()
@@ -314,11 +332,13 @@ MultiAutocomplete.defaultProps = {
 
 MultiAutocomplete.propTypes = {
     className: PropTypes.string,
+    filter: PropTypes.oneOfType([PropTypes.oneOf([false]), PropTypes.func]),
     height: PropTypes.number,
     innerRef: PropTypes.func,
     maxMenuHeight: PropTypes.number,
     onSelect: PropTypes.func,
     options: optionsPropTypes.isRequired,
     placeholder: PropTypes.string,
+    renderSelectedItem: PropTypes.func,
     width: PropTypes.number
 }

@@ -79,7 +79,7 @@ class AsyncAutocomplete extends React.Component {
 const App = () => (
     <AppRoot>
         <Autocomplete onSelect={console.log} options={options} placeholder="Enter a fruit" />
-        <Dropdown onSelect={console.log} options={options} height={80} />
+        <Dropdown onSelect={console.log} options={options} />
         <MultiAutocomplete onSelect={console.log} options={options} placeholder="Enter a fruit" />
         <AsyncAutocomplete onSelect={console.log} />
         <MultiAutocomplete onSelect={console.log} options={options} placeholder="Enter another fruit" height={48} />
